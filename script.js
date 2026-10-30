@@ -31,8 +31,19 @@ import { createShape } from "./shape.js";
 // State variables are the parts of your program that change over time.
 // For example: where the pointer is, how fast it's moving, or whether a drone is on.
 let shape;
-let x = 0;
-let y = 0;
+let pointerPosition = {
+  x: 0,
+  y: 0,
+};
+// shapePosition represents the centre of the shape
+let shapePosition = {
+  x: 0,
+  y: 0,
+};
+let pointerOffset = {
+  x: 0,
+  y: 0,
+};
 let isDragging = false;
 
 // ---------- Sound ----------
@@ -50,31 +61,29 @@ function update() {
 function use() {
   // If something dragging is happening, update the position of the ball.
   if (isDragging) {
-    shape.setPositionPixels(x - shape.width / 2, y - shape.height / 2);
+    shapePosition = {
+      x: pointerPosition.x - pointerOffset.x,
+      y: pointerPosition.y - pointerOffset.y,
+    };
+    shape.setPositionPixels(
+      shapePosition.x - shape.width / 2,
+      shapePosition.y - shape.height / 2,
+    );
   }
+  // console.log(`Pointer: (${pointerPosition.x}), Shape: (${shapePosition.x})`);
 
   window.requestAnimationFrame(use);
 }
 
-// ---------- Controls (Event Handlers) ----------
-// Turn dragging on
-function pointerDown(event) {
-  isDragging = true;
-  console.log("Pointer down at", event.clientX, event.clientY);
-}
-
-// ---------- Controls (Event Handlers) ----------
-// Turn dragging off
-function pointerUp(event) {
+function pointerUp() {
   isDragging = false;
-  console.log("Pointer up at", event.clientX, event.clientY);
 }
 
 function pointerMove(event) {
   // Set the global variables x and y as the current position of the mouse.
   // Do this regardless of whether or not you are dragging.
-  x = event.clientX;
-  y = event.clientY;
+  pointerPosition.x = event.clientX;
+  pointerPosition.y = event.clientY;
 }
 
 // ---------- Setup ----------
@@ -85,10 +94,23 @@ function setup() {
 
   // Example: a shape near the middle of the window. Replace it with your own.
   shape = createShape("shape");
-  shape.setPosition(0.5, 0.5);
+  shape.setPositionPixels(
+    shapePosition.x - shape.width / 2,
+    shapePosition.y - shape.width / 2,
+  );
 
   // Put your event listener code here
-  shape.element.addEventListener("pointerdown", pointerDown);
+  shape.element.addEventListener("pointerdown", (event) => {
+    isDragging = true;
+
+    // Not quite right. Let's correct later
+    pointerOffset = {
+      x: pointerPosition.x - shapePosition.x,
+      y: pointerPosition.y - shapePosition.y,
+    };
+
+    console.log(`PointerOffset: (${pointerOffset.x}, ${pointerOffset.y})`);
+  });
   shape.element.addEventListener("pointerup", pointerUp);
   shape.element.addEventListener("pointerleave", pointerUp);
   shape.element.addEventListener("pointermove", pointerMove);
